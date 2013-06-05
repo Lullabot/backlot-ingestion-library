@@ -383,7 +383,7 @@
       }
     };
 
-    MovieUploader.prototype.startHTML5Upload = function(parsedUploadingUrl) {
+    MovieUploader.prototype.startHTML5Upload = function(uploadingUrlsResponse) {
       var chunks,
         _this = this;
       chunks = new FileSplitter(this.file, CHUNK_SIZE).getChunks();
@@ -399,7 +399,7 @@
           assetMetadata: _this.assetMetadata,
           chunkIndex: index,
           chunk: chunk,
-          uploadUrl: parsedUploadingUrl[index],
+          uploadUrl: uploadingUrlsResponse[index],
           progress: _this.onChunkProgress,
           completed: _this.onChunkComplete,
           error: _this.uploadErrorCallback
@@ -409,8 +409,8 @@
       });
     };
 
-    MovieUploader.prototype.startFlashUpload = function(parsedUploadingUrl) {
-      this.swfUploader.setUploadURL(parsedUploadingUrl[0]);
+    MovieUploader.prototype.startFlashUpload = function(uploadingUrlsResponse) {
+      this.swfUploader.setUploadURL(uploadingUrlsResponse[0]);
       return this.swfUploader.startUpload();
     };
 
@@ -472,8 +472,8 @@
           asset_id: this.assetMetadata.assetID,
           status: "uploaded"
         },
-        type: "PUT",
         dataType: "json",
+        type: "PUT",
         success: function(data) {
           return _this.uploadCompleteCallback(_this.assetMetadata.assetID);
         },
@@ -484,10 +484,9 @@
     };
 
     MovieUploader.prototype.onError = function(response, clientMessage) {
-      var errorMessage, parsedResponse, _;
+      var errorMessage, _;
       try {
-        parsedResponse = JSON.parse(response.responseText);
-        errorMessage = parsedResponse["message"];
+        errorMessage = response["message"];
       } catch (_error) {
         _ = _error;
         errorMessage = response.statusText;
