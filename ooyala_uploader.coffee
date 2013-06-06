@@ -79,6 +79,12 @@ class window.OoyalaUploader
 
   html5UploadSupported: FileReader?
 
+  # jQuery > 1.5 will automatically decode our JSON data for us.
+  @jsonParsePolyfill: (data) =>
+    if (jQuery.fn.jquery < "1.5")
+      return JSON.parse(data)
+    return data
+
 class MovieUploader
   constructor: (options) ->
     @embedCodeReadyCallback = options?.embedCodeReady ? ->
@@ -145,8 +151,10 @@ class MovieUploader
     jQuery.ajax
       url: @assetMetadata.assetCreationUrl
       type: "POST"
-      data: postData
+      data: JSON.stringify(postData)
       dataType: "json"
+      dataFilter: (data, type) => OoyalaUploader.jsonParsePolyfill(data)
+      contentType: 'application/json; charset=UTF-8'
       success: (response) => @onAssetCreated(response)
       error: (response) => @onError(response, "Asset creation error")
 
@@ -167,6 +175,8 @@ class MovieUploader
       url: @assetMetadata.labelCreationUrl.replace("paths", listOfLabels)
       type: "POST"
       dataType: "json"
+      dataFilter: (data, type) => OoyalaUploader.jsonParsePolyfill(data)
+      contentType: 'application/json; charset=UTF-8'
       success: (response) => @assignLabels(response)
       error: (response) => @onError(response, "Label creation error")
 
@@ -175,8 +185,10 @@ class MovieUploader
     jQuery.ajax
       url: @assetMetadata.labelAssignmentUrl.replace("assetID", @assetMetadata.assetID)
       type: "POST"
-      data: JSON.stringify(labelIds)
+      data: OoyalaUploader.jsonParsePollyfill(labelIds)
       dataType: "json"
+      dataFilter: (data, type) => OoyalaUploader.jsonParsePolyfill(data)
+      contentType: 'application/json; charset=UTF-8'
       success: (response) => @onLabelsAssigned(response)
       error: (response) => @onError(response, "Label assignment error")
 
@@ -189,6 +201,8 @@ class MovieUploader
       data:
         asset_id: @assetMetadata.assetID
       dataType: "json"
+      dataFilter: (data, type) => OoyalaUploader.jsonParsePolyfill(data)
+      contentType: 'application/json; charset=UTF-8'
       success: (response) =>
         @onUploadUrlsReceived(response)
       error: (response) =>
@@ -264,10 +278,13 @@ class MovieUploader
   onAssetUploadComplete: =>
     jQuery.ajax
       url: @assetMetadata.assetStatusUpdateUrl.split("assetID").join(@assetMetadata.assetID)
-      data:
+      data: JSON.stringify(
         asset_id: @assetMetadata.assetID
         status: "uploaded"
+        )
       dataType: "json"
+      dataFilter: (data, type) => OoyalaUploader.jsonParsePolyfill(data)
+      contentType: 'application/json; charset=UTF-8'
       type: "PUT"
       success: (data) =>
         @uploadCompleteCallback(@assetMetadata.assetID)

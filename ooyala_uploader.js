@@ -168,9 +168,16 @@
 
     OoyalaUploader.prototype.html5UploadSupported = typeof FileReader !== "undefined" && FileReader !== null;
 
+    OoyalaUploader.jsonParsePolyfill = function(data) {
+      if (jQuery.fn.jquery < "1.5") {
+        return JSON.parse(data);
+      }
+      return data;
+    };
+
     return OoyalaUploader;
 
-  })();
+  }).call(this);
 
   MovieUploader = (function() {
     function MovieUploader(options) {
@@ -277,8 +284,12 @@
       return jQuery.ajax({
         url: this.assetMetadata.assetCreationUrl,
         type: "POST",
-        data: postData,
+        data: JSON.stringify(postData),
         dataType: "json",
+        dataFilter: function(data, type) {
+          return OoyalaUploader.jsonParsePolyfill(data);
+        },
+        contentType: 'application/json; charset=UTF-8',
         success: function(response) {
           return _this.onAssetCreated(response);
         },
@@ -313,6 +324,10 @@
         url: this.assetMetadata.labelCreationUrl.replace("paths", listOfLabels),
         type: "POST",
         dataType: "json",
+        dataFilter: function(data, type) {
+          return OoyalaUploader.jsonParsePolyfill(data);
+        },
+        contentType: 'application/json; charset=UTF-8',
         success: function(response) {
           return _this.assignLabels(response);
         },
@@ -337,8 +352,12 @@
       return jQuery.ajax({
         url: this.assetMetadata.labelAssignmentUrl.replace("assetID", this.assetMetadata.assetID),
         type: "POST",
-        data: JSON.stringify(labelIds),
+        data: OoyalaUploader.jsonParsePollyfill(labelIds),
         dataType: "json",
+        dataFilter: function(data, type) {
+          return OoyalaUploader.jsonParsePolyfill(data);
+        },
+        contentType: 'application/json; charset=UTF-8',
         success: function(response) {
           return _this.onLabelsAssigned(response);
         },
@@ -360,6 +379,10 @@
           asset_id: this.assetMetadata.assetID
         },
         dataType: "json",
+        dataFilter: function(data, type) {
+          return OoyalaUploader.jsonParsePolyfill(data);
+        },
+        contentType: 'application/json; charset=UTF-8',
         success: function(response) {
           return _this.onUploadUrlsReceived(response);
         },
@@ -468,11 +491,15 @@
       var _this = this;
       return jQuery.ajax({
         url: this.assetMetadata.assetStatusUpdateUrl.split("assetID").join(this.assetMetadata.assetID),
-        data: {
+        data: JSON.stringify({
           asset_id: this.assetMetadata.assetID,
           status: "uploaded"
-        },
+        }),
         dataType: "json",
+        dataFilter: function(data, type) {
+          return OoyalaUploader.jsonParsePolyfill(data);
+        },
+        contentType: 'application/json; charset=UTF-8',
         type: "PUT",
         success: function(data) {
           return _this.uploadCompleteCallback(_this.assetMetadata.assetID);
